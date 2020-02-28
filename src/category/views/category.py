@@ -41,7 +41,7 @@ class CategoriesView(View):
             categories = Category.objects.filter(type=category_type)
         else:
             categories = Category.objects.all()
-        data = []
+        data = ['hello']
         if categories:
             data = [category_serializer(category) for category in categories]
         return JsonResponse(data=data, status=200, safe=False)
@@ -92,25 +92,3 @@ class CategoryView(View):
                 'message': f'Category with {cat_id} does not exists.'
             }
             return JsonResponse(err_resp, status=404)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
