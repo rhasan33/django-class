@@ -80,3 +80,15 @@ class CategoryView(View):
                 'message': f'Category with {cat_id} does not exists.'
             }
             return JsonResponse(err_resp, status=404)
+
+    def delete(self, request, cat_id):
+        try:
+            category = Category.objects.get(pk=cat_id)
+            category.delete()
+            return JsonResponse(status=204)
+        except Category.DoesNotExist:
+            err_resp = {
+                'success': False,
+                'message': f'Category with {cat_id} does not exists.'
+            }
+            return JsonResponse(err_resp, status=404)

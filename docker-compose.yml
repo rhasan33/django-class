@@ -8,12 +8,12 @@ services:
       - POSTGRES_PASSWORD=12345
       - POSTGRES_DB=ecom
     ports:
-      - 5430:5432
+      - 5431:5432
 
   redis:
     image: redis:5-alpine
     ports:
-      - 6377:6379
+      - 6378:6379
 
   app:
     build:
