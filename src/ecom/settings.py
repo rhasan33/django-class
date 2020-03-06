@@ -25,7 +25,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get('DEBUG', True))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -36,7 +36,8 @@ LOCAL_APPS = [
 ]
 
 THIRD_PARTY = [
-    'jet'
+    'jet',
+    'rest_framework',
 ]
 
 DJANGO_APPS = [
@@ -113,6 +114,19 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissions',
+    ],
+    'DEFAULT_RENDERER_CLASSES': (
+        'core.renderer.DefaultRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'core.pagination.CustomPagination',
+    'PAGE_SIZE': 12,
+    # 'EXCEPTION_HANDLER': 'base.exceptions.custom_exception_handler',
+}
 
 
 # Internationalization
