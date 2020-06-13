@@ -1,0 +1,1 @@
+from ecom.celery import *

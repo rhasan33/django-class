@@ -22,4 +22,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', HealthCheck.as_view()),
     path('categories/', include('category.urls')),
+    path('users/', include('user.urls')),
 ]
