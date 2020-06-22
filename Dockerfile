@@ -9,11 +9,12 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 WORKDIR /app
 RUN mkdir src
 
+RUN apt-get update && apt-get install build-essential curl -y && \
+    pip3 install -U pip
+
 ADD requirements.txt /app
 
-RUN apt-get update && apt-get install build-essential curl -y && \
-    pip3 install -U pip && \
-    pip3 install -r requirements.txt && \
+RUN pip3 install -r requirements.txt && \
     apt-get --purge autoremove build-essential -y
 
 COPY src/ /app/src/

@@ -1,7 +1,13 @@
+from django.db import IntegrityError
+from django.contrib.auth.hashers import check_password
+from django.conf import settings
+
 from rest_framework.exceptions import MethodNotAllowed
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import ListCreateAPIView, CreateAPIView
 from rest_framework import permissions, status
 from rest_framework.response import Response
+
+import jwt
 
 from user.serializers import UserSerializer
 from user.models import User
@@ -20,6 +26,8 @@ class UserListCreateAPIView(ListCreateAPIView):
         raise MethodNotAllowed(method=self.request.method)
 
     def create(self, request, *args, **kwargs):
+        if 'superuser' in request.data.get('groups'):
+            return Response({'message': 'cannot assign user to superuser group'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             user = User.objects.create_user(
                 first_name=self.request.data['first_name'],
@@ -27,10 +35,30 @@ class UserListCreateAPIView(ListCreateAPIView):
                 gender=self.request.data.get('gender', 'male'),
                 email=self.request.data['email'],
                 password=self.request.data['password'],
-                username=self.request.data['username']
+                groups=self.request.data.get('groups'),
             )
             serializer = self.get_serializer(user)
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            print(e)
-            return Response(data={'message': 'cannot create user'}, status=status.HTTP_409_CONFLICT)
+        except IntegrityError as e:
+            return Response(data={'message': f'cannot create user. reason: {e}'}, status=status.HTTP_409_CONFLICT)
+
+
+class UserLogin(CreateAPIView):
+    serializer_class = UserSerializer
+    queryset = User.objects.filter()
+    permission_classes = (permissions.AllowAny, )
+
+    def create(self, request, *args, **kwargs):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        try:
+            user = User.objects.get(email__exact=email)
+            verify_password = check_password(password=password, encoded=user.password)
+            if not user.is_active:
+                return Response({'message': 'user is not an active user'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            if not verify_password:
+                return Response({'message': 'incorrect password'}, status=status.HTTP_401_UNAUTHORIZED)
+            token = jwt.encode(payload=self.get_serializer(user).data, key=settings.SECRET_KEY, algorithm='HS256')
+            return Response({'token': token}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'message': 'user does not exist'}, status=status.HTTP_404_NOT_FOUND)
