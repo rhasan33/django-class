@@ -4,7 +4,10 @@ from rest_framework.exceptions import NotAcceptable, PermissionDenied
 
 USER_GROUPS = {
     'superuser': [
-        'can_get_users'
+        '*'
+    ],
+    'user': [
+        'can_change_password'
     ]
 }
 
@@ -17,7 +20,8 @@ class UserPermission(BasePermission):
     def has_permission(self, request, view):
         if not request.user.groups:
             raise NotAcceptable(detail='group has to be in the user object')
-        print(request.user.groups[0])
+        if '*' in USER_GROUPS.get(request.user.groups[0]):
+            return True
         if not USER_GROUPS.get(request.user.groups[0]) or self.permission not in USER_GROUPS.get(
             request.user.groups[0]
         ):

@@ -62,3 +62,36 @@ class UserLogin(CreateAPIView):
             return Response({'token': token}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({'message': 'user does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class ChangePassword(CreateAPIView):
+    serializer_class = UserSerializer
+    queryset = User.objects.filter()
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return (UserPermission('can_change_password'), )
+        raise MethodNotAllowed(method=self.request.method)
+
+    def create(self, request, *args, **kwargs):
+        user = self.request.user
+        verify_password = check_password(password=request.data.get('old_password'), encoded=str(user.password))
+        if not verify_password:
+            return Response({'message': 'old password does not match'}, status=status.HTTP_400_BAD_REQUEST)
+        if request.data.get('old_password') == request.data.get('new_password'):
+            return Response({'message': 'new password cannot be the old password'}, status=status.HTTP_400_BAD_REQUEST)
+        if request.data.get('new_password') != request.data.get('confirm_password'):
+            return Response(
+                {'message': 'new password and confirm password does not match'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        user.set_password(request.data.get('new_password'))
+        user.save()
+        serializer = self.get_serializer(user)
+        resp = {
+            'data': serializer.data,
+            'info': f'{user.email} has changed the password'
+        }
+        return Response(data=resp, status=status.HTTP_201_CREATED)
+
+
